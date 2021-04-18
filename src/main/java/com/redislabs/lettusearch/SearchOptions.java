@@ -2,9 +2,9 @@ package com.redislabs.lettusearch;
 
 import java.util.List;
 
-import com.redislabs.lettusearch.RediSearchArgument;
 import com.redislabs.lettusearch.impl.protocol.RediSearchCommandArgs;
 
+import io.lettuce.core.GeoArgs;
 import lombok.*;
 
 import static com.redislabs.lettusearch.impl.protocol.CommandKeyword.*;
@@ -19,6 +19,7 @@ public class SearchOptions<K> implements RediSearchArgument {
 	private boolean withScores;
 	private boolean withPayloads;
 	private boolean withSortKeys;
+	private GeoFilter<K> geoFilter;
 	@Singular
 	private List<K> inKeys;
 	@Singular
@@ -50,6 +51,9 @@ public class SearchOptions<K> implements RediSearchArgument {
 		}
 		if (withSortKeys) {
 			args.add(WITHSORTKEYS);
+		}
+		if(geoFilter != null) {
+			geoFilter.build(args);
 		}
 		if (!inKeys.isEmpty()) {
 			args.add(INKEYS);
@@ -115,6 +119,33 @@ public class SearchOptions<K> implements RediSearchArgument {
 			private K open;
 			private K close;
 
+		}
+	}
+
+	@Data
+	@Builder
+	public static class GeoFilter<K> implements RediSearchArgument {
+
+		@NonNull
+		private K filed;
+		@NonNull
+		private Double longitude;
+		@NonNull
+		private Double latitude;
+		@NonNull
+		private Integer distance;
+		@NonNull
+		private GeoArgs.Unit unit;
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@Override
+		public void build(RediSearchCommandArgs args) {
+			args.add(GEOFILTER);
+			args.addKey(filed);
+			args.add(longitude);
+			args.add(latitude);
+			args.add(distance);
+			args.add(unit);
 		}
 	}
 
